@@ -1,539 +1,643 @@
-local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+--[[
+    VALT :: REAL KATIO PET
+    Clean recode of the decompiled script.
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
+    Cosmetic group gate removed entirely.
+]]
 
-local fly = false
-local speed = false
-local infJump = false
-local invincible = false
-local flySpeed = 60
-local fovSize = 120
-local flyingUp = false
-local flyingDown = false
+--=====================================================================
+-- Services
+--=====================================================================
+local Players           = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService        = game:GetService("RunService")
+local UserInputService  = game:GetService("UserInputService")
+local TweenService      = game:GetService("TweenService")
+local Workspace         = game:GetService("Workspace")
+local Debris            = game:GetService("Debris")
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "Real Katio Hub V1"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local Camera      = Workspace.CurrentCamera
 
--- MENU PRINCIPAL
-local main = Instance.new("Frame")
-main.Name = "Main"
-main.Parent = gui
-main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.Size = UDim2.new(0.76, 0, 0.94, 0)
-main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.BackgroundColor3 = Color3.fromRGB(8, 10, 25)
-main.BorderSizePixel = 0
-main.ClipsDescendants = true
-
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 18)
-
-local stroke = Instance.new("UIStroke", main)
-stroke.Thickness = 4
-stroke.Color = Color3.fromRGB(255, 255, 0)
-
-local gradient = Instance.new("UIGradient", main)
-gradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 10, 35)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 5, 25))
-})
-
-task.spawn(function()
-    while gui.Parent do
-        stroke.Color = Color3.fromHSV((tick() % 5) / 5, 1, 1)
-        task.wait(0.04)
-    end
-end)
-
--- BOTON K
-local openButton = Instance.new("TextButton")
-openButton.Parent = gui
-openButton.Size = UDim2.fromOffset(60, 60)
-openButton.Position = UDim2.new(0, 18, 0.45, 0)
-openButton.Text = "K"
-openButton.TextScaled = true
-openButton.Font = Enum.Font.GothamBlack
-openButton.TextColor3 = Color3.new(1, 1, 1)
-openButton.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
-openButton.ZIndex = 20
-
-Instance.new("UICorner", openButton).CornerRadius = UDim.new(1, 0)
-
-openButton.Activated:Connect(function()
-    main.Visible = not main.Visible
-end)
-
--- ENCABEZADO
-local header = Instance.new("TextButton")
-header.Parent = main
-header.Size = UDim2.new(1, 0, 0, 65)
-header.BackgroundTransparency = 1
-header.Text = "xX REAL KATIO HUB Xx"
-header.TextColor3 = Color3.new(1, 1, 1)
-header.Font = Enum.Font.GothamBlack
-header.TextScaled = true
-
--- ARRASTRAR MENU
-local dragging = false
-local dragStart
-local startPosition
-
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch
-    or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPosition = main.Position
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if dragging and (
-        input.UserInputType == Enum.UserInputType.Touch
-        or input.UserInputType == Enum.UserInputType.MouseMovement
-    ) then
-        local delta = input.Position - dragStart
-        main.Position = UDim2.new(
-            startPosition.X.Scale,
-            startPosition.X.Offset + delta.X,
-            startPosition.Y.Scale,
-            startPosition.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch
-    or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- CERRAR
-local close = Instance.new("TextButton")
-close.Parent = main
-close.Size = UDim2.fromOffset(42, 42)
-close.Position = UDim2.new(1, -48, 0, 8)
-close.Text = "X"
-close.TextScaled = true
-close.Font = Enum.Font.GothamBold
-close.TextColor3 = Color3.new(1, 1, 1)
-close.BackgroundColor3 = Color3.fromRGB(200, 35, 45)
-close.ZIndex = 5
-
-Instance.new("UICorner", close).CornerRadius = UDim.new(0, 8)
-
-close.Activated:Connect(function()
-    main.Visible = false
-end)
-
--- BARRA LATERAL
-local sidebar = Instance.new("Frame")
-sidebar.Parent = main
-sidebar.Position = UDim2.new(0, 12, 0, 75)
-sidebar.Size = UDim2.new(0.27, -12, 1, -88)
-sidebar.BackgroundTransparency = 1
-
-local sideLayout = Instance.new("UIListLayout")
-sideLayout.Parent = sidebar
-sideLayout.Padding = UDim.new(0, 10)
-sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
--- CONTENIDO
-local content = Instance.new("ScrollingFrame")
-content.Parent = main
-content.Position = UDim2.new(0.29, 0, 0, 75)
-content.Size = UDim2.new(0.70, -12, 1, -88)
-content.BackgroundColor3 = Color3.fromRGB(15, 25, 42)
-content.BorderSizePixel = 0
-content.ScrollBarThickness = 5
-content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-content.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-Instance.new("UICorner", content).CornerRadius = UDim.new(0, 12)
-
-local layout = Instance.new("UIListLayout")
-layout.Parent = content
-layout.Padding = UDim.new(0, 9)
-
-local padding = Instance.new("UIPadding")
-padding.Parent = content
-padding.PaddingTop = UDim.new(0, 12)
-padding.PaddingLeft = UDim.new(0, 10)
-padding.PaddingRight = UDim.new(0, 10)
-
--- FUNCIONES DE INTERFAZ
-local function makeButton(parent, text, height)
-    local b = Instance.new("TextButton")
-    b.Parent = parent
-    b.Size = UDim2.new(1, -5, 0, height or 45)
-    b.BackgroundColor3 = Color3.fromRGB(30, 105, 150)
-    b.TextColor3 = Color3.new(1, 1, 1)
-    b.Text = text
-    b.TextScaled = true
-    b.Font = Enum.Font.GothamBold
-
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 9)
-    return b
+--=====================================================================
+-- Kill previous instance
+--=====================================================================
+if getgenv().__VALT_SPAWNER then
+    pcall(getgenv().__VALT_SPAWNER.unload)
 end
 
-local function clearContent()
-    for _, v in ipairs(content:GetChildren()) do
-        if v:IsA("GuiObject") and v ~= layout and v ~= padding then
-            v:Destroy()
+--=====================================================================
+-- Config
+--=====================================================================
+local CONFIG = {
+    MAX_SPAWNS     = 40,
+    SPAWN_DISTANCE = 12,
+    SCALE_MULT     = 1,
+
+    SPIN           = true,
+    FLOAT          = false,
+    OWN_PLOT_ONLY  = true,
+    GROUND         = true,
+    ANIMATE        = true,
+    NAMETAG        = true,
+    ANCHORED       = true,
+
+    GRID_COLUMNS   = (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled) and 2 or 3,
+
+    GIVE_TOOL      = true,
+    HAND_MAX_STUDS = 4,
+
+    MONEY_POPUP    = true,
+    PAY_INTERVAL   = 1,
+    CASH_VISUAL    = true,
+}
+
+--=====================================================================
+-- State
+--=====================================================================
+local running      = true
+local connections  = {}
+local activeSpawns = {}
+local activeTools  = {}
+local pets         = {}
+local rarityList   = { "All" }
+local rarityRank   = {}
+local selectedPet  = nil
+local filter       = { text = "", rarity = "All" }
+
+local UI = {
+    window      = nil,
+    gridTab     = nil,
+    rows        = {},
+    viewport    = nil,
+    counter     = nil,
+    previewInfo = nil,
+}
+
+--=====================================================================
+-- Utility
+--=====================================================================
+local function track(conn)
+    connections[#connections + 1] = conn
+    return conn
+end
+
+local function abbreviateNumber(n)
+    n = tonumber(n) or 0
+    local units = {
+        { 1e12, "T" },
+        { 1e9,  "B" },
+        { 1e6,  "M" },
+        { 1e3,  "K" },
+    }
+    for _, unit in ipairs(units) do
+        if n >= unit[1] then
+            return string.format("%.2f", n / unit[1]):gsub("%.?0+$", "") .. unit[2]
         end
     end
+    return tostring(math.floor(n))
 end
 
-local function addLabel(text)
-    local l = Instance.new("TextLabel")
-    l.Parent = content
-    l.Size = UDim2.new(1, -5, 0, 42)
-    l.BackgroundTransparency = 1
-    l.TextColor3 = Color3.new(1, 1, 1)
-    l.Text = text
-    l.TextScaled = true
-    l.Font = Enum.Font.GothamBold
-    return l
+local function getCharacterRoot()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    return char:FindFirstChild("HumanoidRootPart") or char.PrimaryPart
 end
 
-local function addToggle(name, getter, setter)
-    local b = makeButton(content, "", 48)
+--=====================================================================
+-- Parse assets
+--=====================================================================
+local Directory = require(ReplicatedStorage.Data.Assets).Directory
 
-    local function refresh()
-        b.Text = name .. " : " .. (getter() and "ON" or "OFF")
-        b.BackgroundColor3 = getter()
-            and Color3.fromRGB(20, 145, 85)
-            or Color3.fromRGB(30, 105, 150)
+for key, entry in pairs(Directory) do
+    local rarityInfo  = entry.Rarity or {}
+    local rarityName  = tostring(rarityInfo._id or rarityInfo.DisplayName or "Unknown")
+
+    local pet = {
+        id       = key,
+        name     = tostring(entry.DisplayName or key),
+        icon     = tostring(entry.Icon or ""),
+        eggIcon  = entry.Egg and tostring(entry.Egg.Icon or "") or "",
+        rarity   = rarityName,
+        rank     = tonumber(rarityInfo.RarityNumber) or 0,
+        color    = typeof(rarityInfo.Color) == "Color3" and rarityInfo.Color or Color3.fromRGB(200, 200, 200),
+        rate     = tonumber(entry.EarningRate) or 0,
+        scale    = tonumber(entry.BaseModelScale) or 1,
+        idle     = entry.Animations and entry.Animations.Idle or nil,
+    }
+
+    pets[#pets + 1] = pet
+
+    if rarityRank[rarityName] == nil then
+        rarityRank[rarityName] = pet.rank
+        rarityList[#rarityList + 1] = rarityName
     end
-
-    b.Activated:Connect(function()
-        setter(not getter())
-        refresh()
-    end)
-
-    refresh()
 end
 
--- CIRCULO FOV
-local circle = Instance.new("Frame")
-circle.Name = "FOVCircle"
-circle.Parent = gui
-circle.AnchorPoint = Vector2.new(0.5, 0.5)
-circle.Position = UDim2.new(0.5, 0, 0.5, 0)
-circle.Size = UDim2.fromOffset(fovSize, fovSize)
-circle.BackgroundTransparency = 1
-circle.Visible = false
-
-Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
-
-local circleStroke = Instance.new("UIStroke", circle)
-circleStroke.Thickness = 2
-circleStroke.Color = Color3.fromRGB(0, 255, 255)
-
--- CONTROLES FLY MOVIL
-local flyControls = Instance.new("Frame")
-flyControls.Parent = gui
-flyControls.Size = UDim2.fromOffset(115, 112)
-
--- Separado del botón de salto, hacia el centro de la pantalla
-flyControls.Position = UDim2.new(1, -265, 0.40, 0)
-flyControls.BackgroundTransparency = 1
-flyControls.Visible = false
-flyControls.ZIndex = 15
-
-local upButton = Instance.new("TextButton")
-upButton.Parent = flyControls
-upButton.Size = UDim2.fromOffset(55, 48)
-upButton.Position = UDim2.fromOffset(30, 0)
-upButton.Text = "▲"
-upButton.TextScaled = true
-upButton.BackgroundColor3 = Color3.fromRGB(20, 145, 85)
-upButton.TextColor3 = Color3.new(1, 1, 1)
-upButton.ZIndex = 16
-
-Instance.new("UICorner", upButton).CornerRadius = UDim.new(0, 10)
-
-local downButton = Instance.new("TextButton")
-downButton.Parent = flyControls
-downButton.Size = UDim2.fromOffset(55, 48)
-downButton.Position = UDim2.fromOffset(30, 58)
-downButton.Text = "▼"
-downButton.TextScaled = true
-downButton.BackgroundColor3 = Color3.fromRGB(170, 65, 55)
-downButton.TextColor3 = Color3.new(1, 1, 1)
-downButton.ZIndex = 16
-
-Instance.new("UICorner", downButton).CornerRadius = UDim.new(0, 10)
-
-local function connectHold(button, callback)
-    button.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch
-        or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            callback(true)
-        end
-    end)
-
-    button.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch
-        or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            callback(false)
-        end
-    end)
-end
-
-connectHold(upButton, function(value)
-    flyingUp = value
+table.sort(pets, function(a, b)
+    if a.rank ~= b.rank then return a.rank > b.rank end
+    return a.name < b.name
 end)
 
-connectHold(downButton, function(value)
-    flyingDown = value
+table.sort(rarityList, function(a, b)
+    if a == "All" then return true end
+    if b == "All" then return false end
+    return (rarityRank[a] or 0) > (rarityRank[b] or 0)
 end)
 
--- HOME
-local function home()
-    clearContent()
-    addLabel("Xx BIENVENIDO A REAL KATIO xX")
-    addLabel("REAL KATIO HUB V1")
-    addLabel("MOBILE EDITION")
-    addLabel("¡Disfruta el menú!")
-end
-
--- FACTURES
-local function features()
-    clearContent()
-    addLabel("🚀 FACTURES")
-
-    addToggle("Fly", function()
-        return fly
-    end, function(v)
-        fly = v
-        flyControls.Visible = v
-
-        if not v then
-            flyingUp = false
-            flyingDown = false
-        end
-    end)
-
-    addToggle("Speed", function()
-        return speed
-    end, function(v)
-        speed = v
-    end)
-
-    addToggle("Infinite Jump", function()
-        return infJump
-    end, function(v)
-        infJump = v
-    end)
-
-    local speedLabel = addLabel("Fly Speed: " .. flySpeed)
-
-    local minus = makeButton(content, "Fly Speed -", 42)
-    minus.Activated:Connect(function()
-        flySpeed = math.max(10, flySpeed - 10)
-        speedLabel.Text = "Fly Speed: " .. flySpeed
-    end)
-
-    local plus = makeButton(content, "Fly Speed +", 42)
-    plus.Activated:Connect(function()
-        flySpeed = math.min(200, flySpeed + 10)
-        speedLabel.Text = "Fly Speed: " .. flySpeed
-    end)
-end
-
--- PLAYER
-local function playerTab()
-    clearContent()
-    addLabel("👤 PLAYER")
-
-    addToggle("Invincible SP", function()
-        return invincible
-    end, function(v)
-        invincible = v
-    end)
-
-    addLabel("ForceField local; no garantiza")
-    addLabel("invulnerabilidad en todos los juegos.")
-end
-
--- FOV
-local function fovTab()
-    clearContent()
-    addLabel("🎯 FOV CIRCLE")
-
-    local toggleCircle = makeButton(
-        content,
-        "FOV Circle: " .. (circle.Visible and "ON" or "OFF"),
-        45
-    )
-
-    toggleCircle.Activated:Connect(function()
-        circle.Visible = not circle.Visible
-        toggleCircle.Text = "FOV Circle: " ..
-            (circle.Visible and "ON" or "OFF")
-    end)
-
-    local sizeLabel = addLabel("FOV: " .. fovSize)
-
-    local minus = makeButton(content, "- FOV", 42)
-    minus.Activated:Connect(function()
-        fovSize = math.max(40, fovSize - 10)
-        circle.Size = UDim2.fromOffset(fovSize, fovSize)
-        sizeLabel.Text = "FOV: " .. fovSize
-    end)
-
-    local plus = makeButton(content, "+ FOV", 42)
-    plus.Activated:Connect(function()
-        fovSize = math.min(500, fovSize + 10)
-        circle.Size = UDim2.fromOffset(fovSize, fovSize)
-        sizeLabel.Text = "FOV: " .. fovSize
-    end)
-end
-
--- NAVEGACION
-local function addTab(name, callback)
-    local b = makeButton(sidebar, name, 52)
-    b.Activated:Connect(callback)
-end
-
-addTab("HOME", home)
-addTab("FACTURES", features)
-addTab("PLAYER", playerTab)
-addTab("FOV", fovTab)
-
--- INFINITE JUMP
-UIS.JumpRequest:Connect(function()
-    if infJump and humanoid then
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+--=====================================================================
+-- World helpers
+--=====================================================================
+local function getSpawnFolder()
+    local folder = Workspace:FindFirstChild("__ValtSpawns")
+    if not folder then
+        folder = Instance.new("Folder")
+        folder.Name = "__ValtSpawns"
+        folder.Parent = Workspace
     end
-end)
-
--- FLY
-local bodyVelocity
-local bodyGyro
-local oldAutoRotate = true
-
-local function stopFly()
-    if bodyVelocity then
-        bodyVelocity:Destroy()
-        bodyVelocity = nil
-    end
-
-    if bodyGyro then
-        bodyGyro:Destroy()
-        bodyGyro = nil
-    end
-
-    if humanoid then
-        humanoid.AutoRotate = oldAutoRotate
-    end
-
-    flyingUp = false
-    flyingDown = false
-    flyControls.Visible = false
+    return folder
 end
 
-local function startFly()
-    local root = character and character:FindFirstChild("HumanoidRootPart")
-    if not root or not humanoid then return end
+local function getOwnPlot()
+    local plots = Workspace:FindFirstChild("Plots")
+    if not plots then return nil end
 
-    oldAutoRotate = humanoid.AutoRotate
-    humanoid.AutoRotate = false
-
-    bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.Name = "KatioFlyVelocity"
-    bodyVelocity.MaxForce = Vector3.new(1000000, 1000000, 1000000)
-    bodyVelocity.P = 25000
-    bodyVelocity.Velocity = Vector3.zero
-    bodyVelocity.Parent = root
-
-    bodyGyro = Instance.new("BodyGyro")
-    bodyGyro.Name = "KatioFlyGyro"
-    bodyGyro.MaxTorque = Vector3.new(1000000, 1000000, 1000000)
-    bodyGyro.P = 15000
-    bodyGyro.CFrame = root.CFrame
-    bodyGyro.Parent = root
-
-    flyControls.Visible = true
-end
-
-RunService.Heartbeat:Connect(function()
-    if not character or not character.Parent then return end
-
-    humanoid = character:FindFirstChildOfClass("Humanoid")
-    if not humanoid then return end
-
-    humanoid.WalkSpeed = speed and 32 or 16
-
-    if fly then
-        if not bodyVelocity or not bodyVelocity.Parent then
-            startFly()
-        end
-
-        local root = character:FindFirstChild("HumanoidRootPart")
-        local camera = workspace.CurrentCamera
-
-        if bodyVelocity and root and camera then
-            local move = humanoid.MoveDirection
-
-            -- Dirección del joystick
-            local direction = Vector3.new(move.X, 0, move.Z)
-
-            -- Subir y bajar
-            local vertical = 0
-
-            if flyingUp or UIS:IsKeyDown(Enum.KeyCode.Space) then
-                vertical = vertical + 1
+    local myName = LocalPlayer.Name
+    for _, plot in ipairs(plots:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        if sign then
+            for _, d in ipairs(sign:GetDescendants()) do
+                if d:IsA("TextLabel") and d.Text == myName then
+                    return plot
+                end
             end
+        end
+    end
+    return nil
+end
 
-            if flyingDown
-            or UIS:IsKeyDown(Enum.KeyCode.LeftShift)
-            or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
-                vertical = vertical - 1
+local function getPlotSpawnPosition(index)
+    local plot = getOwnPlot()
+    if not plot then return nil end
+
+    local center = plot:FindFirstChild("CenterPoint") or plot:FindFirstChild("SpawnPoint")
+    if not center then return nil end
+
+    local i      = index or 0
+    local angle  = (i % 10) * (math.pi * 0.2)
+    local radius = math.floor(i / 10) * 3.5 + 5
+
+    return center.Position + Vector3.new(math.cos(angle) * radius, 0, math.sin(angle) * radius)
+end
+
+local function resolveGroundPosition(pos, model)
+    if not CONFIG.GROUND then
+        return pos + Vector3.new(0, model:GetExtentsSize().Y * 0.5, 0)
+    end
+
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = { model, LocalPlayer.Character, getSpawnFolder() }
+    params.IgnoreWater = true
+
+    local result = Workspace:Raycast(pos + Vector3.new(0, 40, 0), Vector3.new(0, -300, 0), params)
+    local y = result and result.Position.Y or pos.Y
+
+    return Vector3.new(pos.X, y + model:GetExtentsSize().Y * 0.5, pos.Z)
+end
+
+--=====================================================================
+-- Visual setup
+--=====================================================================
+local function attachNametag(model, pet)
+    local primary = model.PrimaryPart
+    if not primary then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ValtTag"
+    billboard.Size = UDim2.fromOffset(220, 72)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, model:GetExtentsSize().Y * 0.65 + 2, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 400
+    billboard.Parent = primary
+
+    if pet.icon ~= "" then
+        local img = Instance.new("ImageLabel")
+        img.BackgroundTransparency = 1
+        img.AnchorPoint = Vector2.new(0.5, 0)
+        img.Position = UDim2.new(0.5, 0, 0, 0)
+        img.Size = UDim2.fromOffset(34, 34)
+        img.Image = pet.icon
+        img.ScaleType = Enum.ScaleType.Fit
+        img.Parent = billboard
+    end
+
+    local title = Instance.new("TextLabel")
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 0, 0, 34)
+    title.Size = UDim2.new(1, 0, 0, 22)
+    title.Font = Enum.Font.GothamBold
+    title.TextScaled = true
+    title.TextColor3 = Color3.new(1, 1, 1)
+    title.TextStrokeTransparency = 0.4
+    title.Text = pet.name
+    title.Parent = billboard
+
+    local sub = Instance.new("TextLabel")
+    sub.BackgroundTransparency = 1
+    sub.Position = UDim2.new(0, 0, 0, 56)
+    sub.Size = UDim2.new(1, 0, 0, 16)
+    sub.Font = Enum.Font.GothamMedium
+    sub.TextScaled = true
+    sub.TextColor3 = pet.color
+    sub.TextStrokeTransparency = 0.5
+    sub.Text = string.format("%s | $%s/s", pet.rarity, abbreviateNumber(pet.rate))
+    sub.Parent = billboard
+end
+
+local function setupModel(model, pet)
+    local scale = CONFIG.SCALE_MULT * (pet.scale or 1)
+    if math.abs(scale - 1) > 0.001 then
+        pcall(function() model:ScaleTo(scale) end)
+    end
+
+    local hasJoints = false
+    for _, d in ipairs(model:GetDescendants()) do
+        if d:IsA("Motor6D") or d:IsA("Weld") or d:IsA("WeldConstraint") then
+            hasJoints = true
+            break
+        end
+    end
+
+    local primary = model.PrimaryPart
+
+    for _, part in ipairs(model:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.CanQuery  = false
+            part.CanTouch  = false
+            part.Massless  = true
+
+            local anchored = CONFIG.ANCHORED
+            if anchored then
+                anchored = (not hasJoints) or part == primary
             end
+            part.Anchored = anchored
+        end
+    end
 
-            bodyVelocity.Velocity =
-                direction * flySpeed
-                + Vector3.new(0, vertical * flySpeed, 0)
+    if primary then
+        primary.Anchored = CONFIG.ANCHORED
+    end
 
-            bodyGyro.CFrame = CFrame.lookAt(
-                root.Position,
-                root.Position + camera.CFrame.LookVector
-            )
+    return hasJoints
+end
+
+local function playIdle(model, pet)
+    if not (CONFIG.ANIMATE and pet.idle) then return end
+
+    local ok, err = pcall(function()
+        local host = model:FindFirstChildOfClass("Model") or model
+        local controller = host:FindFirstChildOfClass("AnimationController")
+            or host:FindFirstChildOfClass("Humanoid")
+
+        if not controller then
+            controller = Instance.new("AnimationController")
+            controller.Parent = host
+        end
+
+        local animator = controller:FindFirstChildOfClass("Animator")
+        if not animator then
+            animator = Instance.new("Animator")
+            animator.Parent = controller
+        end
+
+        local anim
+        if typeof(pet.idle) == "Instance" and pet.idle:IsA("Animation") then
+            anim = pet.idle:Clone()
+        else
+            anim = Instance.new("Animation")
+            anim.AnimationId = tostring(pet.idle)
+        end
+
+        local trackAnim = animator:LoadAnimation(anim)
+        trackAnim.Looped = true
+        trackAnim:Play()
+    end)
+
+    if not ok then
+        warn("[VALT SPAWNER] idle animation failed for " .. pet.name .. ": " .. tostring(err))
+    end
+end
+
+--=====================================================================
+-- Spawn limit
+--=====================================================================
+local function enforceSpawnLimit()
+    while #activeSpawns > CONFIG.MAX_SPAWNS do
+        local record = table.remove(activeSpawns, 1)
+        if record and record.model then
+            pcall(function() record.model:Destroy() end)
+        end
+    end
+end
+
+--=====================================================================
+-- Input tracking for tool placement
+--=====================================================================
+local lastTouchPos = nil
+
+track(UserInputService.TouchTap:Connect(function(pos)
+    if pos and pos[1] then lastTouchPos = pos[1] end
+end))
+
+track(UserInputService.TouchEnded:Connect(function(part)
+    lastTouchPos = part.Position
+end))
+
+local function getSpawnPosition()
+    local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+    if isMobile and lastTouchPos and Camera then
+        local ray = Camera:ViewportPointToRay(lastTouchPos.X, lastTouchPos.Y)
+        local params = RaycastParams.new()
+        params.FilterType = Enum.RaycastFilterType.Exclude
+        params.FilterDescendantsInstances = { LocalPlayer.Character, Workspace:FindFirstChild("__ValtSpawns") }
+        local result = Workspace:Raycast(ray.Origin, ray.Direction * 600, params)
+        if result then return result.Position end
+    end
+
+    local ok, mouse = pcall(function() return LocalPlayer:GetMouse() end)
+    if ok and mouse and mouse.Hit and mouse.Target then
+        return mouse.Hit.Position
+    end
+
+    local root = getCharacterRoot()
+    if root then
+        return root.Position + root.CFrame.LookVector * CONFIG.SPAWN_DISTANCE
+    end
+
+    return nil
+end
+
+--=====================================================================
+-- Spawn
+--=====================================================================
+local function spawnPet(pet, positionOverride)
+    if not running then return false, "unloaded" end
+
+    local modelsFolder = ReplicatedStorage:FindFirstChild("AssetModels")
+    if modelsFolder then
+        modelsFolder = modelsFolder:FindFirstChild(pet.id)
+    end
+    if not modelsFolder then
+        return false, "no model for " .. pet.id
+    end
+
+    local root = getCharacterRoot()
+    if not root then
+        return false, "character not loaded"
+    end
+
+    local clone = modelsFolder:Clone()
+    clone.Name = "VALT_" .. pet.id
+
+    local jointed = setupModel(clone, pet)
+    clone.Parent = getSpawnFolder()
+
+    local targetPos
+    if CONFIG.OWN_PLOT_ONLY then
+        targetPos = getPlotSpawnPosition(#activeSpawns)
+    end
+
+    if not targetPos then
+        if typeof(positionOverride) == "Vector3" then
+            targetPos = positionOverride
+        else
+            local index = #activeSpawns
+            local angle = (index % 12) * (math.pi / 6)
+            local dist  = CONFIG.SPAWN_DISTANCE + math.floor(index / 12) * 6
+            targetPos = root.Position + Vector3.new(math.cos(angle) * dist, 0, math.sin(angle) * dist)
+        end
+    end
+
+    local finalPos = resolveGroundPosition(targetPos, clone)
+    local look     = root.Position
+
+    pcall(function()
+        clone:PivotTo(CFrame.new(finalPos, Vector3.new(look.X, finalPos.Y, look.Z)))
+    end)
+
+    if CONFIG.NAMETAG then
+        pcall(attachNametag, clone, pet)
+    end
+
+    playIdle(clone, pet)
+
+    local now = os.clock()
+    activeSpawns[#activeSpawns + 1] = {
+        model     = clone,
+        root      = clone.PrimaryPart,
+        basePos   = finalPos,
+        t0        = now,
+        lastPay   = now,
+        name      = pet.name,
+        rate      = pet.rate,
+        tagHeight = clone:GetExtentsSize().Y * 0.65 + 4,
+        jointed   = jointed,
+    }
+
+    enforceSpawnLimit()
+    return true
+end
+
+--=====================================================================
+-- Clear spawns
+--=====================================================================
+local function clearSpawns()
+    for _, record in ipairs(activeSpawns) do
+        if record.model then
+            pcall(function() record.model:Destroy() end)
+        end
+    end
+    table.clear(activeSpawns)
+
+    local folder = Workspace:FindFirstChild("__ValtSpawns")
+    if folder then
+        pcall(function() folder:Destroy() end)
+    end
+end
+
+--=====================================================================
+-- Money popup
+--=====================================================================
+local function moneyPopup(record)
+    if not record.root or not record.root.Parent then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "ValtCash"
+    billboard.Size = UDim2.fromOffset(150, 40)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, record.tagHeight, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 300
+    billboard.Adornee = record.root
+    billboard.Parent = record.root
+
+    local label = Instance.new("TextLabel")
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.fromScale(1, 1)
+    label.Font = Enum.Font.LuckiestGuy
+    label.TextScaled = true
+    label.TextColor3 = Color3.fromRGB(80, 235, 105)
+    label.TextStrokeColor3 = Color3.fromRGB(10, 45, 15)
+    label.TextStrokeTransparency = 0.15
+    label.Text = "+$" .. abbreviateNumber(record.rate)
+    label.Parent = billboard
+
+    TweenService:Create(billboard,
+        TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        { StudsOffsetWorldSpace = Vector3.new(0, record.tagHeight + 4.5, 0) }
+    ):Play()
+
+    TweenService:Create(label,
+        TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+        { TextTransparency = 1, TextStrokeTransparency = 1 }
+    ):Play()
+
+    Debris:AddItem(billboard, 1.3)
+end
+
+--=====================================================================
+-- Tool giving
+--=====================================================================
+local function giveTool(pet)
+    if not running then return false, "unloaded" end
+
+    local modelsFolder = ReplicatedStorage:FindFirstChild("AssetModels")
+    if modelsFolder then
+        modelsFolder = modelsFolder:FindFirstChild(pet.id)
+    end
+    if not modelsFolder then
+        return false, "no model for " .. pet.id
+    end
+
+    local backpack = LocalPlayer:FindFirstChildOfClass("Backpack")
+    if not backpack then
+        return false, "no backpack"
+    end
+
+    local tool = Instance.new("Tool")
+    tool.Name = pet.name
+    tool.ToolTip = string.format("%s | $%s/s - click to place (one use)", pet.rarity, abbreviateNumber(pet.rate))
+    tool.CanBeDropped = false
+    tool.RequiresHandle = true
+    tool.TextureId = pet.icon
+
+    local handle = Instance.new("Part")
+    handle.Name = "Handle"
+    handle.Size = Vector3.new(1, 1, 1)
+    handle.Transparency = 1
+    handle.CanCollide = false
+    handle.CanQuery = false
+    handle.CanTouch = false
+    handle.Massless = true
+    handle.Parent = tool
+
+    local clone = modelsFolder:Clone()
+    clone.Name = "Pet"
+
+    local size   = clone:GetExtentsSize()
+    local maxDim = math.max(size.X, size.Y, size.Z)
+    if maxDim > CONFIG.HAND_MAX_STUDS then
+        local factor = CONFIG.HAND_MAX_STUDS / maxDim
+        pcall(function() clone:ScaleTo(factor ^ 0.5) end)
+    end
+
+    local primary = clone.PrimaryPart or clone:FindFirstChildWhichIsA("BasePart", true)
+
+    local hasMotor = false
+    for _, d in ipairs(clone:GetDescendants()) do
+        if d:IsA("Motor6D") then
+            hasMotor = true
+            break
+        end
+    end
+
+    for _, part in ipairs(clone:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Anchored = false
+            part.CanCollide = false
+            part.CanQuery = false
+            part.CanTouch = false
+            part.Massless = true
+        end
+    end
+
+    clone.Parent = tool
+
+    if primary then
+        local weld = Instance.new("Weld")
+        weld.Part0 = handle
+        weld.Part1 = primary
+        weld.C0 = CFrame.new(0, clone:GetExtentsSize().Y * 0.4, 0)
+        weld.Parent = handle
+    end
+
+    if not hasMotor then
+        for _, d in ipairs(clone:GetDescendants()) do
+            if d:IsA("BasePart") and d ~= primary then
+                local wc = Instance.new("WeldConstraint")
+                wc.Part0 = primary
+                wc.Part1 = d
+                wc.Parent = primary
+            end
         end
     else
-        if bodyVelocity or bodyGyro then
-            stopFly()
-        end
+        playIdle(clone, pet)
     end
 
-    -- FORCEFIELD LOCAL
-    if invincible and not character:FindFirstChild("KatioForceField") then
-        local ff = Instance.new("ForceField")
-        ff.Name = "KatioForceField"
-        ff.Parent = character
-    elseif not invincible then
-        local ff = character:FindFirstChild("KatioForceField")
-        if ff then
-            ff:Destroy()
+    tool.Parent = backpack
+    activeTools[#activeTools + 1] = tool
+
+    track(tool.Activated:Connect(function()
+        local pos = getSpawnPosition()
+        local ok, err = spawnPet(pet, pos)
+        if not ok then
+            warn("[VALT SPAWNER] place failed: " .. tostring(err))
+            return
         end
+
+        for i = #activeTools, 1, -1 do
+            if activeTools[i] == tool then
+                table.remove(activeTools, i)
+            end
+        end
+        pcall(function() tool:Destroy() end)
+    end))
+
+    return true
+end
+
+local function clearTools()
+    for _, tool in ipairs(activeTools) do
+        pcall(function() tool:Destroy() end)
     end
-end)
+    table.clear(activeTools)
+end
 
--- REAPARECER
-player.CharacterAdded:Connect(function(char)
-    stopFly()
-    character = char
-    humanoid = char:WaitForChild("Humanoid")
-end)
+--=====================================================================
+-- Cash visual (fake local counter)
+--=====================================================================
+local cashVisual = {
+    label = nil,
+    base  = 0,
+    bonus = 0,
+    shown = 0,
+    ours  = nil,
+    conn  = nil,
+}
 
-home()
+local MULTIPLIERS = { K = 1e3, M = 1e6, B = 1e9, T = 1e12 }
 
-print("🥷 REAL KATIO HUB V5 LOADED 👑")
+local function parseMoney(text)
+    local numStr, suffix = tostring(
