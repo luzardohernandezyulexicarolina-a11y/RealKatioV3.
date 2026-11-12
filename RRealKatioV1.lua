@@ -3,105 +3,147 @@ local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
+local guiParent = player:WaitForChild("PlayerGui")
 
-local old = player.PlayerGui:FindFirstChild("KATIO_V1")
+local old = guiParent:FindFirstChild("KATIO_V1")
 if old then old:Destroy() end
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "KATIO_V1"
 gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+gui.Parent = guiParent
 
+local function round(obj, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius)
+    c.Parent = obj
+end
+
+local function outline(obj)
+    local s = Instance.new("UIStroke")
+    s.Thickness = 2
+    s.Color = Color3.fromRGB(0,255,255)
+    s.Parent = obj
+    return s
+end
+
+-- ARRASTRAR CON EL DEDO
+local function makeDraggable(obj, target)
+    local dragging = false
+    local dragStart, startPos
+
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch
+        or input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = target.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (
+            input.UserInputType == Enum.UserInputType.Touch
+            or input.UserInputType == Enum.UserInputType.MouseMovement
+        ) then
+            local delta = input.Position - dragStart
+            target.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- BOTON KATIO
+local launcher = Instance.new("TextButton")
+launcher.Size = UDim2.fromOffset(125,48)
+launcher.Position = UDim2.new(0,15,0.48,0)
+launcher.BackgroundColor3 = Color3.fromRGB(15,15,25)
+launcher.Text = "KATIO"
+launcher.TextColor3 = Color3.new(1,1,1)
+launcher.TextScaled = true
+launcher.Font = Enum.Font.GothamBold
+launcher.Parent = gui
+round(launcher,12)
+local launcherStroke = outline(launcher)
+makeDraggable(launcher,launcher)
+
+-- MENU
 local frame = Instance.new("Frame")
-frame.Size = UDim2.fromOffset(260, 360)
-frame.Position = UDim2.new(0.5,-130,0.2,0)
-frame.BackgroundColor3 = Color3.fromRGB(15,15,25)
+frame.Size = UDim2.fromOffset(280,390)
+frame.Position = UDim2.new(0,15,0.20,0)
+frame.BackgroundColor3 = Color3.fromRGB(12,12,24)
+frame.Visible = false
 frame.Parent = gui
+round(frame,15)
+local frameStroke = outline(frame)
 
-Instance.new("UICorner",frame).CornerRadius = UDim.new(0,12)
-
-local stroke = Instance.new("UIStroke",frame)
-stroke.Thickness = 3
-
-local header = Instance.new("TextButton")
-header.Size = UDim2.new(1,0,0,42)
-header.BackgroundColor3 = Color3.fromRGB(30,25,45)
-header.Text = "🥷 REAL KATIO V1 👑"
-header.TextColor3 = Color3.new(1,1,1)
-header.TextScaled = true
+-- ENCABEZADO
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1,0,0,48)
+header.BackgroundColor3 = Color3.fromRGB(25,20,45)
 header.Parent = frame
+round(header,12)
+makeDraggable(header,frame)
 
--- MENÚ MÓVIL Y DESLIZABLE
-local dragging = false
-local dragStart, startPos
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-45,1,0)
+title.Position = UDim2.new(0,5,0,0)
+title.BackgroundTransparency = 1
+title.Text = "🥷 KATIO 👑"
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
+title.Parent = header
 
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch
-    or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
-
-UIS.InputChanged:Connect(function(input)
-    if dragging and (
-        input.UserInputType == Enum.UserInputType.Touch
-        or input.UserInputType == Enum.UserInputType.MouseMovement
-    ) then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(
-            startPos.X.Scale,startPos.X.Offset + delta.X,
-            startPos.Y.Scale,startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch
-    or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- BOTÓN CERRAR Y REABRIR
 local close = Instance.new("TextButton")
-close.Size = UDim2.fromOffset(35,30)
-close.Position = UDim2.new(1,-40,0,5)
+close.Size = UDim2.fromOffset(38,38)
+close.Position = UDim2.new(1,-42,0,5)
 close.Text = "X"
 close.TextScaled = true
-close.Parent = frame
-
-local reopen = Instance.new("TextButton")
-reopen.Size = UDim2.fromOffset(110,40)
-reopen.Position = UDim2.new(0,10,0.5,0)
-reopen.Text = "🥷 KATIO"
-reopen.Visible = false
-reopen.Parent = gui
+close.BackgroundColor3 = Color3.fromRGB(150,20,50)
+close.TextColor3 = Color3.new(1,1,1)
+close.Parent = header
+round(close,10)
 
 close.MouseButton1Click:Connect(function()
     frame.Visible = false
-    reopen.Visible = true
+    launcher.Visible = true
 end)
 
-reopen.MouseButton1Click:Connect(function()
-    frame.Visible = true
-    reopen.Visible = false
+launcher.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
 end)
 
--- OPCIONES CON DESPLAZAMIENTO
+-- LISTA DESLIZABLE
 local scroll = Instance.new("ScrollingFrame")
-scroll.Position = UDim2.new(0,5,0,48)
-scroll.Size = UDim2.new(1,-10,1,-55)
+scroll.Position = UDim2.new(0,7,0,55)
+scroll.Size = UDim2.new(1,-14,1,-63)
 scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 7
-scroll.CanvasSize = UDim2.new(0,0,0,650)
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 5
+scroll.CanvasSize = UDim2.new(0,0,0,0)
 scroll.Parent = frame
 
-local layout = Instance.new("UIListLayout",scroll)
+local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0,7)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.Parent = scroll
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    scroll.CanvasSize = UDim2.new(
+        0,0,0,layout.AbsoluteContentSize.Y + 15
+    )
+end)
 
 local function character()
     return player.Character
@@ -117,34 +159,52 @@ local function root()
     return c and c:FindFirstChild("HumanoidRootPart")
 end
 
-local function button(name,callback)
+-- CREAR BOTONES
+local function button(name, callback)
     local b = Instance.new("TextButton")
-    b.Size = UDim2.new(1,-10,0,42)
-    b.BackgroundColor3 = Color3.fromRGB(40,40,60)
+    b.Size = UDim2.new(1,-8,0,43)
+    b.BackgroundColor3 = Color3.fromRGB(35,30,55)
     b.TextColor3 = Color3.new(1,1,1)
+    b.Text = name
     b.TextScaled = true
     b.Font = Enum.Font.GothamBold
-    b.Text = name
     b.Parent = scroll
-    Instance.new("UICorner",b).CornerRadius = UDim.new(0,8)
-    b.MouseButton1Click:Connect(callback)
+    round(b,10)
+    outline(b)
+
+    b.Activated:Connect(callback)
     return b
 end
 
-local function toggle(name,callback)
+-- TOGGLES CORREGIDOS
+local function toggle(name, callback)
     local active = false
-    local b = button(name.." : OFF",function()
+    local b
+
+    b = button(name.." : OFF",function()
         active = not active
         b.Text = name.." : "..(active and "ON" or "OFF")
-        callback(active)
+        b.BackgroundColor3 = active
+            and Color3.fromRGB(20,110,70)
+            or Color3.fromRGB(35,30,55)
+
+        local success, err = pcall(callback,active)
+        if not success then
+            warn("KATIO ERROR:",err)
+        end
     end)
+
     return b
 end
 
 -- SPEED
+local speed = 32
+
 toggle("⚡ SPEED",function(on)
     local h = humanoid()
-    if h then h.WalkSpeed = on and 32 or 16 end
+    if h then
+        h.WalkSpeed = on and speed or 16
+    end
 end)
 
 button("🏃 SPEED NORMAL",function()
@@ -161,6 +221,9 @@ local bv, bg
 
 local function stopFly()
     flying = false
+    up = false
+    down = false
+
     if bv then bv:Destroy() bv = nil end
     if bg then bg:Destroy() bg = nil end
 end
@@ -179,12 +242,17 @@ local function startFly()
 
     bg = Instance.new("BodyGyro")
     bg.MaxTorque = Vector3.new(1e9,1e9,1e9)
-    bg.P = 1e5
+    bg.P = 10000
+    bg.CFrame = workspace.CurrentCamera.CFrame
     bg.Parent = r
 end
 
 toggle("🚀 FLY",function(on)
-    if on then startFly() else stopFly() end
+    if on then
+        startFly()
+    else
+        stopFly()
+    end
 end)
 
 button("⬆ SUBIR",function()
@@ -197,7 +265,7 @@ button("⬇ BAJAR",function()
     up = false
 end)
 
-button("⏹ DETENER SUBIR/BAJAR",function()
+button("⏹ DETENER ALTURA",function()
     up = false
     down = false
 end)
@@ -212,21 +280,24 @@ end)
 RunService.RenderStepped:Connect(function()
     if flying and bv and bv.Parent then
         local h = humanoid()
-        if not h then return end
+        local camera = workspace.CurrentCamera
 
-        local vertical = 0
-        if up or UIS:IsKeyDown(Enum.KeyCode.Space) then
-            vertical = flySpeed
-        elseif down or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
-            vertical = -flySpeed
-        end
+        if h and camera then
+            local vertical = 0
 
-        bv.Velocity =
-            h.MoveDirection * flySpeed
-            + Vector3.new(0,vertical,0)
+            if up or UIS:IsKeyDown(Enum.KeyCode.Space) then
+                vertical = flySpeed
+            elseif down or UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                vertical = -flySpeed
+            end
 
-        if bg then
-            bg.CFrame = camera.CFrame
+            bv.Velocity =
+                h.MoveDirection * flySpeed
+                + Vector3.new(0,vertical,0)
+
+            if bg then
+                bg.CFrame = camera.CFrame
+            end
         end
     end
 end)
@@ -234,7 +305,7 @@ end)
 -- INFINITE JUMP
 local infinite = false
 
-toggle("♾️ INFINITE JUMP",function(on)
+toggle("♾ INFINITE JUMP",function(on)
     infinite = on
 end)
 
@@ -249,9 +320,19 @@ end)
 
 -- NOCLIP
 local noclip = false
+local oldCollision = {}
 
 toggle("👻 NOCLIP",function(on)
     noclip = on
+
+    if not on then
+        for part,value in pairs(oldCollision) do
+            if part and part.Parent then
+                part.CanCollide = value
+            end
+        end
+        table.clear(oldCollision)
+    end
 end)
 
 RunService.Stepped:Connect(function()
@@ -260,6 +341,9 @@ RunService.Stepped:Connect(function()
         if c then
             for _,part in ipairs(c:GetDescendants()) do
                 if part:IsA("BasePart") then
+                    if oldCollision[part] == nil then
+                        oldCollision[part] = part.CanCollide
+                    end
                     part.CanCollide = false
                 end
             end
@@ -269,31 +353,52 @@ end)
 
 -- INVISIBLE LOCAL
 local invisible = false
+local oldTransparency = {}
 
 toggle("👻 INVISIBLE LOCAL",function(on)
     invisible = on
     local c = character()
     if not c then return end
 
-    for _,part in ipairs(c:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.LocalTransparencyModifier = on and 1 or 0
-        elseif part:IsA("Decal") then
-            part.Transparency = on and 1 or 0
+    if on then
+        table.clear(oldTransparency)
+
+        for _,part in ipairs(c:GetDescendants()) do
+            if part:IsA("BasePart") then
+                oldTransparency[part] = part.LocalTransparencyModifier
+                part.LocalTransparencyModifier = 1
+            elseif part:IsA("Decal") then
+                oldTransparency[part] = part.Transparency
+                part.Transparency = 1
+            end
         end
+    else
+        for part,value in pairs(oldTransparency) do
+            if part and part.Parent then
+                if part:IsA("BasePart") then
+                    part.LocalTransparencyModifier = value
+                elseif part:IsA("Decal") then
+                    part.Transparency = value
+                end
+            end
+        end
+        table.clear(oldTransparency)
     end
 end)
 
--- ESP VISUAL
+-- ESP
 local esp = false
 local highlights = {}
 
-local function updateESP()
+local function clearESP()
     for _,h in pairs(highlights) do
-        h:Destroy()
+        if h then h:Destroy() end
     end
     table.clear(highlights)
+end
 
+local function updateESP()
+    clearESP()
     if not esp then return end
 
     for _,p in ipairs(Players:GetPlayers()) do
@@ -319,31 +424,50 @@ Players.PlayerAdded:Connect(function(p)
     end)
 end)
 
--- COLORES ARCOÍRIS
-task.spawn(function()
-    local hue = 0
-    while gui.Parent do
-        hue = (hue + 0.005) % 1
-        local color = Color3.fromHSV(hue,1,1)
-        stroke.Color = color
-        header.TextColor3 = color
-        task.wait(0.03)
-    end
+Players.PlayerRemoving:Connect(function()
+    updateESP()
 end)
 
+-- REINICIO DEL PERSONAJE
 player.CharacterAdded:Connect(function()
     task.wait(1)
-    if flying then startFly() end
+
+    if flying then
+        startFly()
+    end
+
+    if noclip then
+        table.clear(oldCollision)
+    end
+
     if invisible then
         local c = character()
         if c then
             for _,part in ipairs(c:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.LocalTransparencyModifier = 1
+                elseif part:IsA("Decal") then
+                    part.Transparency = 1
                 end
             end
         end
     end
 end)
 
-print("🥷 REAL KATIO V1 👑 CARGADO")
+-- ARCOIRIS ANIMADO
+task.spawn(function()
+    local hue = 0
+
+    while gui.Parent do
+        hue = (hue + 0.005) % 1
+        local color = Color3.fromHSV(hue,1,1)
+
+        frameStroke.Color = color
+        launcherStroke.Color = color
+        title.TextColor3 = color
+
+        task.wait(0.03)
+    end
+end)
+
+print("KATIO V1 CARGADO CORRECTAMENTE")
