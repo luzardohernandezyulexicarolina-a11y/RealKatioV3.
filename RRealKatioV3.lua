@@ -16,7 +16,7 @@ local flyingUp = false
 local flyingDown = false
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "RealKatioHubV5"
+gui.Name = "Real Katio Hub V1"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
@@ -298,8 +298,8 @@ end)
 -- HOME
 local function home()
     clearContent()
-    addLabel("🥷 BIENVENIDO A REAL KATIO 👑")
-    addLabel("REAL KATIO HUB V5")
+    addLabel("Xx BIENVENIDO A REAL KATIO xX")
+    addLabel("REAL KATIO HUB V1")
     addLabel("MOBILE EDITION")
     addLabel("¡Disfruta el menú!")
 end
